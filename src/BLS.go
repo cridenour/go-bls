@@ -16,8 +16,6 @@ func main() {
 	data, err := bls.GetSeries(params)
 	perror(err)
 
-	fmt.Printf("%v", data)
-
 	for _, series := range data.Results.Series {
 		fmt.Printf("SeriesID: %s\n", series.SeriesID)
 		for _, data := range series.Data {
