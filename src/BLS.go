@@ -12,9 +12,15 @@ func perror(err error) {
 }
 
 func main() {
-	params := bls.TimeSeriesParams{[]string{"EIUIR"}, 2012, 2014}
+	params := bls.TimeSeriesParams{[]string{"EIUIR"}, 2002, 2014}
 	data, err := bls.GetSeries(params)
 	perror(err)
+
+	if len(data.Message) > 0 {
+		for _, message := range data.Message {
+			fmt.Printf("Error: %s", message)
+		}
+	}
 
 	for _, series := range data.Results.Series {
 		fmt.Printf("SeriesID: %s\n", series.SeriesID)

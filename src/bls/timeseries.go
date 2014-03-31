@@ -3,32 +3,36 @@ package bls
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 )
 
+// A TimeSeriesParams is a group of parameters passed into GetSeries
 type TimeSeriesParams struct {
 	SeriesID  []string `json:"seriesid"`
 	StartYear int      `json:"startyear"`
 	EndYear   int      `json:"endyear"`
 }
 
+// The TimeSeriesResponse is the parent object returned from the API
 type TimeSeriesResponse struct {
-	Results      TimeSeriesResults           `json:"Results"`
-	Message      []TimeSeriesResponseMessage `json:"message"`
-	ResponseTime int64                       `json:"responseTime"`
-	Status       string                      `json:"status"`
+	Results      TimeSeriesResults `json:"Results"`
+	Message      []string          `json:"message"`
+	ResponseTime int64             `json:"responseTime"`
+	Status       string            `json:"status"`
 }
 
+// TimeSeriesResults holds the group of series returned
 type TimeSeriesResults struct {
 	Series []TimeSeries `json:"series"`
 }
 
+// TimeSeries represents each series and it's data
 type TimeSeries struct {
 	Data     []TimeSeriesData `json:"data"`
 	SeriesID string           `json:"seriesID"`
 }
 
+// TimeSeriesData holds the time based data points in the series
 type TimeSeriesData struct {
 	Footnotes  []TimeSeriesFootnote `json:"footnotes"`
 	Period     string               `json:"period"`
@@ -37,38 +41,31 @@ type TimeSeriesData struct {
 	Year       string               `json:"year"`
 }
 
+// TimeSeriesFootnote is a footnote related to the data point
 type TimeSeriesFootnote struct {
 	Code string `json:"code"`
 	Text string `json:"text"`
 }
 
-type TimeSeriesResponseMessage struct {}
-
+// GetSeries returns one or more TimeSeries in a TimeSeriesResponse for a given TimeSeriesParams
 func GetSeries(params TimeSeriesParams) (TimeSeriesResponse, error) {
 	var series TimeSeriesResponse
 
 	url := "http://api.bls.gov/publicAPI/v1/timeseries/data/"
 
-	params_json, err := json.Marshal(params)
+	paramsJSON, err := json.Marshal(params)
 	if err != nil {
 		return series, err
 	}
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(params_json))
+	resp, err := http.Post(url, "application/json", bytes.NewBuffer(paramsJSON))
 	if err != nil {
 		return series, err
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return series, err
-	}
 
-	err = json.Unmarshal(body, &series)
-	if err != nil {
-		return series, err
-	}
-
-	return series, nil
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&series)
+	return series, err
 }
