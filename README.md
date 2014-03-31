@@ -21,7 +21,7 @@ package main
 
 import (
 	"fmt"
-	bls "github.com/cridenour/go-bls"
+	"github.com/cridenour/go-bls"
 )
 
 func perror(err error) {
