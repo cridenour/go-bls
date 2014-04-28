@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"time"
 )
 
 // A TimeSeriesParams is a group of parameters passed into GetSeries
@@ -26,10 +27,12 @@ type TimeSeriesResults struct {
 	Series []TimeSeries `json:"series"`
 }
 
+type DataSlice []TimeSeriesData
+
 // TimeSeries represents each series and it's data
 type TimeSeries struct {
-	Data     []TimeSeriesData `json:"data"`
-	SeriesID string           `json:"seriesID"`
+	Data     DataSlice `json:"data"`
+	SeriesID string    `json:"seriesID"`
 }
 
 // TimeSeriesData holds the time based data points in the series
@@ -39,6 +42,23 @@ type TimeSeriesData struct {
 	PeriodName string               `json:"periodName"`
 	Value      string               `json:"value"`
 	Year       string               `json:"year"`
+}
+
+func (ds DataSlice) Less(i, j int) bool {
+	if ds[i].Year == ds[j].Year {
+		t_i, _ := time.Parse("January", ds[i].PeriodName)
+		t_j, _ := time.Parse("January", ds[j].PeriodName)
+		return t_i.Month() < t_j.Month()
+	}
+	return ds[i].Year < ds[j].Year
+}
+
+func (ds DataSlice) Swap(i, j int) {
+	ds[i], ds[j] = ds[j], ds[i]
+}
+
+func (ds DataSlice) Len() int {
+	return len(ds)
 }
 
 // TimeSeriesFootnote is a footnote related to the data point
