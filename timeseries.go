@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+	"errors"
 )
 
 // A TimeSeriesParams is a group of parameters passed into GetSeries
@@ -68,8 +69,9 @@ type TimeSeriesFootnote struct {
 }
 
 // GetSeries returns one or more TimeSeries in a TimeSeriesResponse for a given TimeSeriesParams
-func GetSeries(params TimeSeriesParams) (TimeSeriesResponse, error) {
-	var series TimeSeriesResponse
+func GetSeries(params TimeSeriesParams) ([]TimeSeries, error) {
+	var series []TimeSeries
+	var response TimeSeriesResponse
 
 	url := "http://api.bls.gov/publicAPI/v1/timeseries/data/"
 
@@ -86,6 +88,16 @@ func GetSeries(params TimeSeriesParams) (TimeSeriesResponse, error) {
 	defer resp.Body.Close()
 
 	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&series)
-	return series, err
+	err = decoder.Decode(&response)
+	if err != nil {
+		return series, err
+	}
+
+	if len(response.Message) > 0 {
+		return series, errors.New(response.Message[0])
+	}
+
+	series = response.Results.Series
+
+	return series, nil
 }
